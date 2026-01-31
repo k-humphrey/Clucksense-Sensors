@@ -47,6 +47,10 @@ const int stepperSpeed = 200;
 //initialized stepper
 Stepper myStepper(stepsPerRevolution, IN1, IN3, IN2, IN4);
 
+//state memory
+uint8_t oldOpen = 0, oldClose = 0;
+int temp;
+ 
 
 void setup() {
 
@@ -64,7 +68,7 @@ void setup() {
 }
 
 void loop() {
-  int temp = dht.readTemperature(true);
+  temp = dht.readTemperature(true);
   int humidity = dht.readHumidity();
   Serial.print("Humidity: ");
   Serial.print(humidity);
@@ -108,25 +112,34 @@ void loop() {
   {
     String msg = Serial2.readStringUntil(',');
     Serial.println(msg);
-    uint8_t command = msg.toInt();
+    uint8_t open = msg.toInt();
 
     //read in desired door state
     msg = Serial2.readStringUntil(',');
-    uint8_t state = msg.toInt();
+    uint8_t close = msg.toInt();
 
     //value to change temp to if correct state
     msg = Serial2.readStringUntil(',');
     int set_temp = msg.toInt();
 
-    switch(command)
-    {
-      case 1:
-        myStepper.step(stepsPerRevolution);  
-        break; 
-      case 2:
-        myStepper.step(-stepsPerRevolution);
-      case 3:
-        break;
+    if(open && open != oldOpen){
+      myStepper.step(stepsPerRevolution);
+      oldOpen = 1;
+    }
+    else if(close && close != oldClose){
+      myStepper.step(-stepsPerRevolution);
+      oldClose = 1;
+    }
+    else if(set_temp > temp){
+      //turn on fan
+      Serial.println("turning on fan");
+    }
+    else if(set_temp < temp){
+      //turn on heater
+      Serial.println("turning on heater");
+    }
+    else{
+      Serial.println("idk what goin on...");
     }
 
   }
