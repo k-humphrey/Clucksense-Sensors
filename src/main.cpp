@@ -10,11 +10,16 @@
 *********/
 #include <Arduino.h>
 #include <DHT.h>
+#include "../include/uartcom.h"
 
 //DHT
 #define DHTPIN 4
 #define DHTTYPE DHT11
 DHT dht(DHTPIN, DHTTYPE);
+
+//UART definitions
+#define RX_PIN 16
+#define TX_PIN 17
 
 //ultra sonic sensor
 const int trigPin = 5;
@@ -35,6 +40,8 @@ void setup() {
   //ultra sonic sensor setup
   pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
   pinMode(echoPin, INPUT); // Sets the echoPin as an Input
+
+  uart_link_begin(1, 15200, RX_PIN, TX_PIN);
  
 }
 
@@ -70,6 +77,28 @@ void loop() {
   Serial.println(distanceCm);
   Serial.print("Distance (inch): ");
   Serial.println(distanceInch);
+
+  SensorData status {
+    .type = 1,
+    .door_status = 1,
+    .temp = 23,
+    .humidity = 55,
+    .food = 0,
+    .water = 1
+  };
+  uart_send_sensor(status);
+
+
+  CommandData cmd;
+  if (uart_read_command(cmd)) {
+    Serial.printf(
+      "CMD=%u door=%u temp=%d\n",
+      cmd.command,
+      cmd.door_status,
+      cmd.temperature
+    );
+  }
+
   
   delay(2000);
 }
