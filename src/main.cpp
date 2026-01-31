@@ -29,6 +29,9 @@ long duration;
 float distanceCm;
 float distanceInch;
 
+//rain sensor
+#define RAIN_PIN 23
+
 //define sound speed in cm/uS
 #define SOUND_SPEED 0.034
 #define CM_TO_INCH 0.393701
@@ -50,7 +53,6 @@ Stepper myStepper(stepsPerRevolution, IN1, IN3, IN2, IN4);
 //state memory
 uint8_t oldOpen = 0, oldClose = 0;
 int temp;
- 
 
 void setup() {
 
@@ -100,8 +102,17 @@ void loop() {
   Serial.print("Distance (inch): ");
   Serial.println(distanceInch);
 
-  bool food = 0;
-  bool water = 0;
+  //assume food and water are fine, but use the readings to tell otherwise.
+  bool food = 1;
+  bool water = 1;
+  if(distanceInch >= 1.5){
+    food = 0;
+  }
+  if(!digitalRead(RAIN_PIN)){ //if raining (the confusing way)
+    water = 0;
+  }
+
+
   //Serial2.printf("%d,%d,%d,%d\n", temp, humidity,food, water);
   //Serial2.print("Hello World!");
   Serial2.printf("{\"temp\":%d,\"humidity\":%d,\"food\":%d,\"water\":%d}\n",
