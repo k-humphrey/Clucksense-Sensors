@@ -10,6 +10,7 @@
 *********/
 #include <Arduino.h>
 #include <DHT.h>
+#include <Stepper.h>
 #include "../include/uartcom.h"
 
 //DHT
@@ -32,7 +33,24 @@ float distanceInch;
 #define SOUND_SPEED 0.034
 #define CM_TO_INCH 0.393701
 
+
+//steps per revolution for stepper motor
+const int stepsPerRevolution = 2048;
+const int stepperSpeed = 200;
+
+//pins for Stepper motor
+#define IN1 32
+#define IN2 33
+#define IN3 25
+#define IN4 26
+
+//initialized stepper
+Stepper myStepper(stepsPerRevolution, IN1, IN3, IN2, IN4);
+
+
 void setup() {
+
+  myStepper.setSpeed(5);
   //serial setup
   Serial.begin(115200);
   //dht setup
@@ -41,8 +59,8 @@ void setup() {
   pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
   pinMode(echoPin, INPUT); // Sets the echoPin as an Input
 
-  uart_link_begin(1, 15200, RX_PIN, TX_PIN);
- 
+  //begin serial for communication with central board
+  Serial2.begin(115200, SERIAL_8N1, RX_PIN, TX_PIN);
 }
 
 void loop() {
@@ -78,28 +96,40 @@ void loop() {
   Serial.print("Distance (inch): ");
   Serial.println(distanceInch);
 
-  SensorData status {
-    .type = 1,
-    .door_status = 1,
-    .temp = 23,
-    .humidity = 55,
-    .food = 0,
-    .water = 1
-  };
-  uart_send_sensor(status);
-
-
-  CommandData cmd;
-  if (uart_read_command(cmd)) {
-    Serial.printf(
-      "CMD=%u door=%u temp=%d\n",
-      cmd.command,
-      cmd.door_status,
-      cmd.temperature
-    );
-  }
+  bool food = 0;
+  bool water = 0;
+  //Serial2.printf("%d,%d,%d,%d\n", temp, humidity,food, water);
+  //Serial2.print("Hello World!");
+  Serial2.printf("{\"temp\":%d,\"humidity\":%d,\"food\":%d,\"water\":%d}\n",
+               temp, humidity, food, water);
 
   
+  if(Serial2.available())
+  {
+    String msg = Serial2.readStringUntil(',');
+    Serial.println(msg);
+    uint8_t command = msg.toInt();
+
+    //read in desired door state
+    msg = Serial2.readStringUntil(',');
+    uint8_t state = msg.toInt();
+
+    //value to change temp to if correct state
+    msg = Serial2.readStringUntil(',');
+    int set_temp = msg.toInt();
+
+    switch(command)
+    {
+      case 1:
+        myStepper.step(stepsPerRevolution);  
+        break; 
+      case 2:
+        myStepper.step(-stepsPerRevolution);
+      case 3:
+        break;
+    }
+
+  }
   delay(2000);
 }
 
