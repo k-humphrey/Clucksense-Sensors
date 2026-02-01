@@ -29,6 +29,7 @@ long duration;
 float distanceCm;
 float distanceInch;
 
+
 //define sound speed in cm/uS
 #define SOUND_SPEED 0.034
 #define CM_TO_INCH 0.393701
@@ -36,7 +37,7 @@ float distanceInch;
 
 //steps per revolution for stepper motor
 const int stepsPerRevolution = 2048;
-const int stepperSpeed = 200;
+const int stepperSpeed = 5;
 
 //pins for Stepper motor
 #define IN1 32
@@ -48,13 +49,13 @@ const int stepperSpeed = 200;
 Stepper myStepper(stepsPerRevolution, IN1, IN3, IN2, IN4);
 
 //state memory
-uint8_t oldOpen = 0, oldClose = 0;
+int oldOpen = 0; 
 int temp;
  
 
 void setup() {
 
-  myStepper.setSpeed(5);
+  myStepper.setSpeed(stepperSpeed);
   //serial setup
   Serial.begin(115200);
   //dht setup
@@ -100,8 +101,16 @@ void loop() {
   Serial.print("Distance (inch): ");
   Serial.println(distanceInch);
 
-  bool food = 0;
+  bool food;
   bool water = 0;
+  if (distanceInch > 1.5)
+  {
+    food = 0;
+  }
+  else food = 1;
+
+  
+
   //Serial2.printf("%d,%d,%d,%d\n", temp, humidity,food, water);
   //Serial2.print("Hello World!");
   Serial2.printf("{\"temp\":%d,\"humidity\":%d,\"food\":%d,\"water\":%d}\n",
@@ -110,13 +119,11 @@ void loop() {
   
   if(Serial2.available())
   {
+    /*
+    //read in desired door state
     String msg = Serial2.readStringUntil(',');
     Serial.println(msg);
     uint8_t open = msg.toInt();
-
-    //read in desired door state
-    msg = Serial2.readStringUntil(',');
-    uint8_t close = msg.toInt();
 
     //value to change temp to if correct state
     msg = Serial2.readStringUntil(',');
@@ -126,23 +133,61 @@ void loop() {
       myStepper.step(stepsPerRevolution);
       oldOpen = 1;
     }
-    else if(close && close != oldClose){
+    else if (!open && open != oldOpen)
+    {
       myStepper.step(-stepsPerRevolution);
-      oldClose = 1;
+      oldOpen = 0;
     }
-    else if(set_temp > temp){
+    
+    else if(set_temp < temp){
       //turn on fan
       Serial.println("turning on fan");
     }
-    else if(set_temp < temp){
+    else if(set_temp > temp){
       //turn on heater
       Serial.println("turning on heater");
     }
     else{
       Serial.println("idk what goin on...");
     }
+*/
+    String commandType = Serial2.readStringUntil(',');
+    Serial.printf("Command Type: %s\n", commandType);
+    int commandValue = Serial2.readStringUntil('\n').toInt();
+    Serial.printf("Command value: %d\n", commandValue);
 
+    if (commandType == "doorOpen")
+    {
+      if(commandValue == 0 && commandValue != oldOpen)
+      {
+        Serial.println("Closing door");
+        myStepper.step(-stepsPerRevolution);
+        oldOpen = commandValue;
+      }
+      else if(commandValue == 1 && commandValue != oldOpen)
+      {
+        Serial.println("Opening door");
+        myStepper.step(stepsPerRevolution);
+        oldOpen = commandValue;
+      }
+      else Serial.println("Door unchanged");
+    }
+    else if (commandType == "targetTemp")
+    {
+      if (commandValue > temp)
+      {
+        Serial.println("Turning on heater");
+      }
+      else if (commandValue < temp)
+      {
+        Serial.println("Turning on Fan");
+      }
+    } 
   }
+  
+
   delay(2000);
+
+ 
 }
 
