@@ -29,6 +29,8 @@ long duration;
 float distanceCm;
 float distanceInch;
 
+//rain sensor
+#define RAIN_PIN 23
 
 //define sound speed in cm/uS
 #define SOUND_SPEED 0.034
@@ -51,7 +53,6 @@ Stepper myStepper(stepsPerRevolution, IN1, IN3, IN2, IN4);
 //state memory
 int oldOpen = 0; 
 int temp;
- 
 
 void setup() {
 
