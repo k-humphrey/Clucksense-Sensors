@@ -49,7 +49,8 @@ const int stepperSpeed = 5;
 #define IN4 26
 
 //pin for relay
-#define RELAY 12
+#define RELAY1 12
+#define RELAY2 13 
 
 //initialized stepper
 Stepper myStepper(stepsPerRevolution, IN1, IN3, IN2, IN4);
@@ -75,6 +76,10 @@ void setup() {
   //set pin modes for rain sensor
   pinMode(POWER_PIN, OUTPUT);
   pinMode(RAIN_PIN, INPUT);
+
+  //leds
+  pinMode(RELAY1, OUTPUT);
+  pinMode(RELAY2, OUTPUT);
 }
 
 void loop() {
@@ -158,11 +163,16 @@ void loop() {
       if (commandValue > temp)
       {
         Serial.println("Turning on heater");
+         digitalWrite(RELAY2, HIGH);
+         delay(600);
+         digitalWrite(RELAY2, LOW);
       }
       else if (commandValue < temp)
       {
         Serial.println("Turning on Fan");
-        //digitalWrite(RELAY, LOW);
+        digitalWrite(RELAY1, HIGH);
+        delay(600);
+        digitalWrite(RELAY1, LOW);
       }
     } 
   }
