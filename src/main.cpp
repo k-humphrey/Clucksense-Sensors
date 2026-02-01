@@ -120,38 +120,6 @@ void loop() {
   
   if(Serial2.available())
   {
-    /*
-    //read in desired door state
-    String msg = Serial2.readStringUntil(',');
-    Serial.println(msg);
-    uint8_t open = msg.toInt();
-
-    //value to change temp to if correct state
-    msg = Serial2.readStringUntil(',');
-    int set_temp = msg.toInt();
-
-    if(open && open != oldOpen){
-      myStepper.step(stepsPerRevolution);
-      oldOpen = 1;
-    }
-    else if (!open && open != oldOpen)
-    {
-      myStepper.step(-stepsPerRevolution);
-      oldOpen = 0;
-    }
-    
-    else if(set_temp < temp){
-      //turn on fan
-      Serial.println("turning on fan");
-    }
-    else if(set_temp > temp){
-      //turn on heater
-      Serial.println("turning on heater");
-    }
-    else{
-      Serial.println("idk what goin on...");
-    }
-*/
     String commandType = Serial2.readStringUntil(',');
     Serial.printf("Command Type: %s\n", commandType);
     int commandValue = Serial2.readStringUntil('\n').toInt();
