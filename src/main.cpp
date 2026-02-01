@@ -48,6 +48,9 @@ const int stepperSpeed = 5;
 #define IN3 25
 #define IN4 26
 
+//pin for relay
+#define RELAY 12
+
 //initialized stepper
 Stepper myStepper(stepsPerRevolution, IN1, IN3, IN2, IN4);
 
@@ -119,7 +122,7 @@ void loop() {
   digitalWrite(POWER_PIN, HIGH);
   delay(10);
   water = !digitalRead(RAIN_PIN); //1 means dry here
-
+  Serial.printf("Wata: %d", water);
 
   //Serial2.printf("%d,%d,%d,%d\n", temp, humidity,food, water);
   //Serial2.print("Hello World!");
@@ -129,38 +132,6 @@ void loop() {
   
   if(Serial2.available())
   {
-    /*
-    //read in desired door state
-    String msg = Serial2.readStringUntil(',');
-    Serial.println(msg);
-    uint8_t open = msg.toInt();
-
-    //value to change temp to if correct state
-    msg = Serial2.readStringUntil(',');
-    int set_temp = msg.toInt();
-
-    if(open && open != oldOpen){
-      myStepper.step(stepsPerRevolution);
-      oldOpen = 1;
-    }
-    else if (!open && open != oldOpen)
-    {
-      myStepper.step(-stepsPerRevolution);
-      oldOpen = 0;
-    }
-    
-    else if(set_temp < temp){
-      //turn on fan
-      Serial.println("turning on fan");
-    }
-    else if(set_temp > temp){
-      //turn on heater
-      Serial.println("turning on heater");
-    }
-    else{
-      Serial.println("idk what goin on...");
-    }
-*/
     String commandType = Serial2.readStringUntil(',');
     Serial.printf("Command Type: %s\n", commandType);
     int commandValue = Serial2.readStringUntil('\n').toInt();
@@ -191,6 +162,7 @@ void loop() {
       else if (commandValue < temp)
       {
         Serial.println("Turning on Fan");
+        //digitalWrite(RELAY, LOW);
       }
     } 
   }
