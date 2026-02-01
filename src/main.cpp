@@ -31,6 +31,7 @@ float distanceInch;
 
 //rain sensor
 #define RAIN_PIN 23
+#define POWER_PIN 21
 
 //define sound speed in cm/uS
 #define SOUND_SPEED 0.034
@@ -67,6 +68,10 @@ void setup() {
 
   //begin serial for communication with central board
   Serial2.begin(115200, SERIAL_8N1, RX_PIN, TX_PIN);
+
+  //set pin modes for rain sensor
+  pinMode(POWER_PIN, OUTPUT);
+  pinMode(RAIN_PIN, INPUT);
 }
 
 void loop() {
@@ -103,14 +108,18 @@ void loop() {
   Serial.println(distanceInch);
 
   bool food;
-  bool water = 0;
+  bool water;
   if (distanceInch > 1.5)
   {
     food = 0;
   }
   else food = 1;
 
-  
+  //rain sensor
+  digitalWrite(POWER_PIN, HIGH);
+  delay(10);
+  water = !digitalRead(RAIN_PIN); //1 means dry here
+
 
   //Serial2.printf("%d,%d,%d,%d\n", temp, humidity,food, water);
   //Serial2.print("Hello World!");
@@ -120,6 +129,38 @@ void loop() {
   
   if(Serial2.available())
   {
+    /*
+    //read in desired door state
+    String msg = Serial2.readStringUntil(',');
+    Serial.println(msg);
+    uint8_t open = msg.toInt();
+
+    //value to change temp to if correct state
+    msg = Serial2.readStringUntil(',');
+    int set_temp = msg.toInt();
+
+    if(open && open != oldOpen){
+      myStepper.step(stepsPerRevolution);
+      oldOpen = 1;
+    }
+    else if (!open && open != oldOpen)
+    {
+      myStepper.step(-stepsPerRevolution);
+      oldOpen = 0;
+    }
+    
+    else if(set_temp < temp){
+      //turn on fan
+      Serial.println("turning on fan");
+    }
+    else if(set_temp > temp){
+      //turn on heater
+      Serial.println("turning on heater");
+    }
+    else{
+      Serial.println("idk what goin on...");
+    }
+*/
     String commandType = Serial2.readStringUntil(',');
     Serial.printf("Command Type: %s\n", commandType);
     int commandValue = Serial2.readStringUntil('\n').toInt();
